@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Money Maker 47' — Interactive Financial Model</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --navy: #1b3a5c;
+    --navy-light: #eaf0f5;
+    --blue-input: #0b5fff;
+    --green-good: #0a7a3d;
+    --red-bad: #b3261e;
+    --grey: #666666;
+    --border: #d7dee6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    padding: 20px 24px 40px;
+  }
+  h1 { color: var(--navy); font-size: 22px; margin: 0 0 2px; }
+  .subtitle { color: var(--grey); font-size: 13px; margin: 0 0 18px; font-style: italic; }
+  .layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px 6px;
+    margin-bottom: 14px;
+  }
+  .panel h3 {
+    background: var(--navy);
+    color: #fff;
+    font-size: 12.5px;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    margin: -14px -16px 12px;
+    padding: 8px 16px;
+    border-radius: 10px 10px 0 0;
+  }
+  .row {
+    margin-bottom: 12px;
+  }
+  .row label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+  .row label .val {
+    color: var(--blue-input);
+    font-weight: bold;
+  }
+  .row input[type=range] {
+    width: 100%;
+    accent-color: var(--navy);
+  }
+  .row .note {
+    font-size: 10.5px;
+    color: var(--grey);
+    font-style: italic;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1100px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+  .kpi {
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .kpi .label { font-size: 10.5px; color: var(--grey); text-transform: uppercase; letter-spacing: .03em; }
+  .kpi .value { font-size: 19px; font-weight: bold; color: var(--navy); margin-top: 3px; }
+  .kpi .value.good { color: var(--green-good); }
+  .kpi .value.bad { color: var(--red-bad); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-bottom: 18px;
+  }
+  th, td {
+    padding: 7px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    background: var(--navy);
+    color: #fff;
+    font-weight: bold;
+    font-size: 11.5px;
+    text-transform: uppercase;
+  }
+  tbody tr:nth-child(even) { background: #fafcfe; }
+  tr.total td { font-weight: bold; border-top: 2px solid var(--navy); }
+  .neg { color: var(--red-bad); }
+  .chart-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    height: 300px;
+    margin-bottom: 18px;
+  }
+  .footnote {
+    font-size: 11px;
+    color: var(--grey);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+  .reset-btn {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 14px;
+  }
+  .reset-btn:hover { opacity: .9; }
+  .headline {
+    background: var(--navy-light);
+    border-left: 4px solid var(--navy);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Money Maker 47' — Interactive Financial Model</h1>
+<p class="subtitle">Cooper Catamarans Money Maker 47' · Road Town → Norman Island cruise-excursion charter · single vessel</p>
+
+<div class="layout">
+  <div>
+    <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+
+    <div class="panel">
+      <h3>Vessel & Financing</h3>
+      <div class="row">
+        <label>Landed capex (BVI, all-in) <span class="val" id="capex_v"></span></label>
+        <input type="range" id="capex" min="600000" max="1500000" step="25000">
+        <div class="note">Working estimate — not a source quote. Cooper Catamarans' own quote only supports ~$600k-$777k ex-yard.</div>
+      </div>
+      <div class="row">
+        <label>Down payment <span class="val" id="downPct_v"></span></label>
+        <input type="range" id="downPct" min="10" max="100" step="5">
+        <div class="note">100% = all-cash purchase. Lower it to model a loan.</div>
+      </div>
+      <div class="row">
+        <label>Loan interest rate <span class="val" id="rate_v"></span></label>
+        <input type="range" id="rate" min="4" max="12" step="0.25">
+      </div>
+      <div class="row">
+        <label>Loan term <span class="val" id="term_v"></span></label>
+        <input type="range" id="term" min="5" max="25" step="1">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Charter Operations</h3>
+      <div class="row">
+        <label>Charter price per round trip <span class="val" id="price_v"></span></label>
+        <input type="range" id="price" min="2000" max="3500" step="50">
+      </div>
+      <div class="row">
+        <label>Round trips per day <span class="val" id="tripsPerDay_v"></span></label>
+        <input type="range" id="tripsPerDay" min="1" max="2" step="1">
+      </div>
+      <div class="row">
+        <label>Operating days per year <span class="val" id="opDays_v"></span></label>
+        <input type="range" id="opDays" min="50" max="232" step="5">
+        <div class="note">2023 Road Town cruise pier handled 232 ship calls (BVIPA) — the practical ceiling.</div>
+      </div>
+      <div class="row">
+        <label>Commission / booking fee <span class="val" id="commission_v"></span></label>
+        <input type="range" id="commission" min="0" max="50" step="1">
+        <div class="note">% of charter price taken by a cruise-line/DMC booking channel, if any.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Fuel & Crew</h3>
+      <div class="row">
+        <label>Fuel price <span class="val" id="fuelPrice_v"></span></label>
+        <input type="range" id="fuelPrice" min="4" max="7" step="0.1">
+      </div>
+      <div class="row">
+        <label>Fuel burn, combined engines <span class="val" id="burnRate_v"></span></label>
+        <input type="range" id="burnRate" min="15" max="45" step="1">
+      </div>
+      <div class="row">
+        <label>Underway hours per round trip <span class="val" id="hoursPerRT_v"></span></label>
+        <input type="range" id="hoursPerRT" min="1" max="3" step="0.1">
+      </div>
+      <div class="row">
+        <label>Crew cost per day <span class="val" id="crewCostDay_v"></span></label>
+        <input type="range" id="crewCostDay" min="300" max="1200" step="50">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Fixed Costs & Escalation</h3>
+      <div class="row">
+        <label>Maintenance reserve <span class="val" id="maintPct_v"></span></label>
+        <input type="range" id="maintPct" min="3" max="15" step="0.5">
+      </div>
+      <div class="row">
+        <label>Insurance <span class="val" id="insPct_v"></span></label>
+        <input type="range" id="insPct" min="1" max="5" step="0.25">
+      </div>
+      <div class="row">
+        <label>Dockage/mooring per month <span class="val" id="dockMonth_v"></span></label>
+        <input type="range" id="dockMonth" min="1500" max="5000" step="100">
+      </div>
+      <div class="row">
+        <label>VISR compliance/survey per year <span class="val" id="visrYear_v"></span></label>
+        <input type="range" id="visrYear" min="2000" max="10000" step="500">
+      </div>
+      <div class="row">
+        <label>Admin / marketing / overhead <span class="val" id="adminPct_v"></span></label>
+        <input type="range" id="adminPct" min="3" max="15" step="1">
+      </div>
+      <div class="row">
+        <label>Annual charter price growth <span class="val" id="priceGrowth_v"></span></label>
+        <input type="range" id="priceGrowth" min="0" max="8" step="0.5">
+      </div>
+      <div class="row">
+        <label>Annual cost inflation <span class="val" id="costInflation_v"></span></label>
+        <input type="range" id="costInflation" min="0" max="8" step="0.5">
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Capital Required</div><div class="value" id="kpi_capex">–</div></div>
+      <div class="kpi"><div class="label">Down Payment</div><div class="value" id="kpi_down">–</div></div>
+      <div class="kpi"><div class="label">Year 1 Net Op. Cash Flow</div><div class="value" id="kpi_y1op">–</div></div>
+      <div class="kpi"><div class="label">Payback Period</div><div class="value" id="kpi_payback">–</div></div>
+      <div class="kpi"><div class="label">5-Year IRR</div><div class="value" id="kpi_irr">–</div></div>
+    </div>
+
+    <div class="headline" id="headline">–</div>
+
+    <div class="chart-wrap"><canvas id="cfChart"></canvas></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>($)</th><th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th><th>Year 5</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <div class="footnote">
+      Model mirrors the Money Maker Scenario tab of the full "Romasco Boat Options — Financial Model" workbook. Fixed to a single vessel. Fuel-burn default (30 gal/hr) is grounded in third-party test-boat data for comparable engines (twin Suzuki DF300 / twin Mercury Verado 350 V10), scaled up for a heavier loaded 47' catamaran — the Cooper Catamarans quote itself gives no consumption figures. Landed capex, interest rate and loan term are all working estimates, not lender or broker quotes. IRR is shown as "n/m" when cumulative cash flow is still negative at Year 5, since IRR on an unrecovered investment has no reliable, meaningful root.
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = {
+  capex: 1000000, downPct: 100, rate: 8, term: 15,
+  price: 2750, tripsPerDay: 2, opDays: 100, commission: 0,
+  fuelPrice: 5.5, burnRate: 30, hoursPerRT: 1.5, crewCostDay: 550,
+  maintPct: 9, insPct: 2, dockMonth: 3000, visrYear: 5000, adminPct: 8,
+  priceGrowth: 3, costInflation: 3
+};
+
+const ids = Object.keys(DEFAULTS);
+let chart = null;
+
+function fmtMoney(n) {
+  const neg = n < 0;
+  const abs = Math.round(Math.abs(n));
+  const s = "$" + abs.toLocaleString("en-US");
+  return neg ? "(" + s + ")" : s;
+}
+function fmtPct(n, digits) { return n.toFixed(digits === undefined ? 1 : digits) + "%"; }
+
+function pmt(rate, nper, pv) {
+  if (nper <= 0 || pv <= 0) return 0;
+  if (rate === 0) return -pv / nper;
+  return -(rate * pv) / (1 - Math.pow(1 + rate, -nper));
+}
+
+function irr(cashflows) {
+  function npv(r) {
+    return cashflows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + r, i), 0);
+  }
+  let lo = -0.99, hi = 10;
+  let nLo = npv(lo), nHi = npv(hi);
+  if (nLo * nHi > 0) return null;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    const nMid = npv(mid);
+    if (Math.abs(nMid) < 1e-6) return mid;
+    if ((nLo < 0) === (nMid < 0)) { lo = mid; nLo = nMid; } else { hi = mid; }
+  }
+  return (lo + hi) / 2;
+}
+
+function readInputs() {
+  const v = {};
+  ids.forEach(id => { v[id] = parseFloat(document.getElementById(id).value); });
+  return v;
+}
+
+function compute(v) {
+  const capex = v.capex;
+  const downPayment = capex * (v.downPct / 100);
+  const loanAmount = capex - downPayment;
+  const rate = v.rate / 100;
+  const term = v.term;
+  const debtServiceAnnual = pmt(rate, term, loanAmount);
+  const priceGrowth = v.priceGrowth / 100;
+  const costInflation = v.costInflation / 100;
+  const commission = v.commission / 100;
+  const maintPct = v.maintPct / 100;
+  const insPct = v.insPct / 100;
+  const adminPct = v.adminPct / 100;
+
+  const rows = [];
+  let cumulative = 0;
+  for (let i = 0; i < 5; i++) {
+    const yr = i + 1;
+    const priceY = v.price * Math.pow(1 + priceGrowth, i);
+    const fleetRTday = v.tripsPerDay;
+    const grossRev = priceY * fleetRTday * v.opDays;
+    const netRev = grossRev * (1 - commission);
+    const fuelCost = v.fuelPrice * Math.pow(1 + costInflation, i) * v.burnRate * v.hoursPerRT * fleetRTday * v.opDays;
+    const crewCost = v.crewCostDay * Math.pow(1 + costInflation, i) * v.opDays;
+    const maintCost = capex * maintPct;
+    const insCost = capex * insPct;
+    const dockCost = v.dockMonth * 12 * Math.pow(1 + costInflation, i);
+    const visrCost = v.visrYear * Math.pow(1 + costInflation, i);
+    const adminCost = netRev * adminPct;
+    const totalOpCost = fuelCost + crewCost + maintCost + insCost + dockCost + visrCost + adminCost;
+    const netOpCF = netRev - totalOpCost;
+    const downOutflow = (yr === 1) ? -downPayment : 0;
+    const debtOutflow = (yr <= term) ? debtServiceAnnual : 0;
+    const netCF = netOpCF + downOutflow + debtOutflow;
+    cumulative += netCF;
+    rows.push({ yr, grossRev, netRev, totalOpCost, netOpCF, debtOutflow, netCF, cumulative });
+  }
+
+  let payback = "Beyond 5 years";
+  for (const r of rows) { if (r.cumulative >= 0) { payback = "Year " + r.yr; break; } }
+
+  const irrVal = rows[4].cumulative < 0 ? null : irr(rows.map(r => r.netCF));
+
+  return { capex, downPayment, loanAmount, debtServiceAnnual, rows, payback, irrVal };
+}
+
+function render() {
+  const v = readInputs();
+
+  document.getElementById("capex_v").textContent = fmtMoney(v.capex);
+  document.getElementById("downPct_v").textContent = v.downPct + "%";
+  document.getElementById("rate_v").textContent = v.rate.toFixed(2) + "%";
+  document.getElementById("term_v").textContent = v.term + " yrs";
+  document.getElementById("price_v").textContent = fmtMoney(v.price);
+  document.getElementById("tripsPerDay_v").textContent = v.tripsPerDay;
+  document.getElementById("opDays_v").textContent = v.opDays + " days";
+  document.getElementById("commission_v").textContent = v.commission + "%";
+  document.getElementById("fuelPrice_v").textContent = "$" + v.fuelPrice.toFixed(2) + "/gal";
+  document.getElementById("burnRate_v").textContent = v.burnRate + " gal/hr";
+  document.getElementById("hoursPerRT_v").textContent = v.hoursPerRT.toFixed(1) + " hrs";
+  document.getElementById("crewCostDay_v").textContent = fmtMoney(v.crewCostDay) + "/day";
+  document.getElementById("maintPct_v").textContent = v.maintPct.toFixed(1) + "%";
+  document.getElementById("insPct_v").textContent = v.insPct.toFixed(2) + "%";
+  document.getElementById("dockMonth_v").textContent = fmtMoney(v.dockMonth) + "/mo";
+  document.getElementById("visrYear_v").textContent = fmtMoney(v.visrYear) + "/yr";
+  document.getElementById("adminPct_v").textContent = v.adminPct + "%";
+  document.getElementById("priceGrowth_v").textContent = v.priceGrowth.toFixed(1) + "%";
+  document.getElementById("costInflation_v").textContent = v.costInflation.toFixed(1) + "%";
+
+  const m = compute(v);
+
+  document.getElementById("kpi_capex").textContent = fmtMoney(m.capex);
+  document.getElementById("kpi_down").textContent = fmtMoney(m.downPayment) + (v.downPct < 100 ? " (" + v.downPct + "%)" : " (cash)");
+  const y1opEl = document.getElementById("kpi_y1op");
+  y1opEl.textContent = fmtMoney(m.rows[0].netOpCF);
+  y1opEl.className = "value " + (m.rows[0].netOpCF >= 0 ? "good" : "bad");
+
+  const paybackEl = document.getElementById("kpi_payback");
+  paybackEl.textContent = m.payback;
+  paybackEl.className = "value " + (m.payback === "Beyond 5 years" ? "bad" : "good");
+
+  const irrEl = document.getElementById("kpi_irr");
+  if (m.irrVal === null) {
+    irrEl.textContent = "n/m";
+    irrEl.className = "value bad";
+  } else {
+    irrEl.textContent = fmtPct(m.irrVal * 100, 1);
+    irrEl.className = "value " + (m.irrVal >= 0 ? "good" : "bad");
+  }
+
+  const financedNote = v.downPct < 100
+    ? " Annual debt service is " + fmtMoney(m.debtServiceAnnual) + " on a " + fmtMoney(m.loanAmount) + " loan at " + v.rate.toFixed(2) + "% over " + v.term + " years."
+    : " Modeled as an all-cash purchase (no financing).";
+  document.getElementById("headline").textContent =
+    "At " + fmtMoney(v.price) + "/round trip, " + v.tripsPerDay + " trip(s)/day and " + v.opDays + " operating days/year: Year 1 net operating cash flow is " +
+    fmtMoney(m.rows[0].netOpCF) + " against " + fmtMoney(m.capex) + " of total capital. Cumulative cash flow reaches " +
+    fmtMoney(m.rows[4].cumulative) + " by the end of Year 5 (" + m.payback + ")." + financedNote;
+
+  const tbody = document.getElementById("tbody");
+  const lines = [
+    ["Gross charter revenue", r => r.grossRev, false],
+    ["Net charter revenue", r => r.netRev, false],
+    ["Total operating costs", r => -r.totalOpCost, true],
+    ["Net operating cash flow", r => r.netOpCF, false, true],
+    ["Debt service", r => r.debtOutflow, true],
+    ["Net cash flow", r => r.netCF, false, true],
+    ["Cumulative cash flow", r => r.cumulative, false, true],
+  ];
+  tbody.innerHTML = lines.map(([label, fn, alwaysNeg, bold]) => {
+    const cells = m.rows.map(r => {
+      const val = fn(r);
+      const cls = val < 0 ? "neg" : "";
+      return `<td class="${cls}">${fmtMoney(val)}</td>`;
+    }).join("");
+    return `<tr class="${bold ? "total" : ""}"><td>${label}</td>${cells}</tr>`;
+  }).join("");
+
+  const ctx = document.getElementById("cfChart").getContext("2d");
+  const labels = m.rows.map(r => "Year " + r.yr);
+  const data = m.rows.map(r => r.cumulative);
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.update();
+  } else {
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Cumulative cash flow ($)",
+          data,
+          borderColor: "#1b3a5c",
+          backgroundColor: "rgba(27,58,92,0.08)",
+          fill: true,
+          tension: 0.15,
+          pointRadius: 4,
+          pointBackgroundColor: "#1b3a5c",
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            ticks: { callback: v => "$" + (v / 1000).toFixed(0) + "k" },
+            grid: { color: "#eee" }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+function applyDefaults() {
+  ids.forEach(id => { document.getElementById(id).value = DEFAULTS[id]; });
+  render();
+}
+
+ids.forEach(id => {
+  document.getElementById(id).addEventListener("input", render);
+});
+document.getElementById("resetBtn").addEventListener("click", applyDefaults);
+
+applyDefaults();
+</script>
+</body>
+</html>
