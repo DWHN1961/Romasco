@@ -51,6 +51,23 @@
     padding: 8px 16px;
     border-radius: 10px 10px 0 0;
   }
+  .subgroup {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px 4px;
+    margin-bottom: 12px;
+    background: #fbfcfd;
+  }
+  .subgroup .subgroup-title {
+    font-size: 11.5px;
+    font-weight: bold;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
   .row {
     margin-bottom: 12px;
   }
@@ -76,6 +93,36 @@
     margin-top: 2px;
     line-height: 1.3;
   }
+  .readonly-row {
+    margin-bottom: 12px;
+    background: var(--navy-light);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .readonly-row label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: bold;
+    margin: 0;
+  }
+  .readonly-row .val { color: var(--navy); font-weight: bold; }
+  .readonly-row .note { font-size: 10.5px; color: var(--grey); font-style: italic; margin-top: 3px; line-height: 1.3; }
+  .mix-row {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--navy-light);
+  }
+  .mix-row label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+  .mix-row .val { color: var(--blue-input); }
+  .mix-row input[type=range] { width: 100%; accent-color: var(--navy); }
+  .mix-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--grey); margin-top: 2px; }
   .kpis {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -116,6 +163,7 @@
   }
   tbody tr:nth-child(even) { background: #fafcfe; }
   tr.total td { font-weight: bold; border-top: 2px solid var(--navy); }
+  tr.sub td { color: var(--grey); font-size: 11.5px; }
   .neg { color: var(--red-bad); }
   .chart-wrap {
     background: #fff;
@@ -158,7 +206,7 @@
 <body>
 
 <h1>Money Maker 47' — Interactive Financial Model</h1>
-<p class="subtitle">Cooper Catamarans Money Maker 47' · Road Town → Norman Island cruise-excursion charter · single vessel</p>
+<p class="subtitle">Cooper Catamarans Money Maker 47' · Road Town cruise-excursion charter · single vessel</p>
 
 <div class="layout">
   <div>
@@ -188,23 +236,55 @@
 
     <div class="panel">
       <h3>Charter Operations</h3>
-      <div class="row">
-        <label>Charter price per round trip <span class="val" id="price_v"></span></label>
-        <input type="range" id="price" min="2000" max="3500" step="50">
-      </div>
-      <div class="row">
-        <label>Round trips per day <span class="val" id="tripsPerDay_v"></span></label>
-        <input type="range" id="tripsPerDay" min="1" max="2" step="1">
-      </div>
+
       <div class="row">
         <label>Operating days per year <span class="val" id="opDays_v"></span></label>
         <input type="range" id="opDays" min="50" max="232" step="5">
-        <div class="note">2023 Road Town cruise pier handled 232 ship calls (BVIPA) — the practical ceiling.</div>
+        <div class="note">2023 Road Town cruise pier handled 232 ship calls (BVIPA) — the practical ceiling. Shared across both routes below; the route mix slider splits these days between them.</div>
       </div>
       <div class="row">
         <label>Commission / booking fee <span class="val" id="commission_v"></span></label>
         <input type="range" id="commission" min="0" max="50" step="1">
-        <div class="note">% of charter price taken by a cruise-line/DMC booking channel, if any.</div>
+        <div class="note">% of charter price taken by a cruise-line/DMC booking channel, if any. Applied the same regardless of route.</div>
+      </div>
+
+      <div class="mix-row">
+        <label>Route mix <span class="val" id="mix_v"></span></label>
+        <input type="range" id="mix" min="0" max="100" step="5">
+        <div class="mix-labels"><span>100% Sir Francis Drake</span><span>100% Virgin Gorda</span></div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Sir Francis Drake Channel</div>
+        <div class="row">
+          <label>Charter price per round trip <span class="val" id="sfdPrice_v"></span></label>
+          <input type="range" id="sfdPrice" min="2000" max="3500" step="50">
+        </div>
+        <div class="row">
+          <label>Round trips per day <span class="val" id="sfdTripsPerDay_v"></span></label>
+          <input type="range" id="sfdTripsPerDay" min="1" max="2" step="1">
+        </div>
+        <div class="row">
+          <label>Underway hours per round trip <span class="val" id="sfdHoursPerRT_v"></span></label>
+          <input type="range" id="sfdHoursPerRT" min="1" max="3" step="0.1">
+          <div class="note">Road Town ↔ Norman Island, ~7nm one-way.</div>
+        </div>
+      </div>
+
+      <div class="subgroup">
+        <div class="subgroup-title">Virgin Gorda</div>
+        <div class="row">
+          <label>Charter price per round trip <span class="val" id="vgPrice_v"></span></label>
+          <input type="range" id="vgPrice" min="2000" max="3500" step="50">
+        </div>
+        <div class="row">
+          <label>Round trips per day <span class="val" id="vgTripsPerDay_v"></span></label>
+          <input type="range" id="vgTripsPerDay" min="1" max="2" step="1">
+        </div>
+        <div class="readonly-row">
+          <label>Underway hours per round trip <span class="val" id="vgHoursPerRT_v"></span></label>
+          <div class="note">= Sir Francis Drake's hours/RT + 1.5 hrs for the longer run, plus deployment/recovery. Not independently adjustable — move the Sir Francis Drake slider above to change this too.</div>
+        </div>
       </div>
     </div>
 
@@ -219,12 +299,9 @@
         <input type="range" id="burnRate" min="15" max="45" step="1">
       </div>
       <div class="row">
-        <label>Underway hours per round trip <span class="val" id="hoursPerRT_v"></span></label>
-        <input type="range" id="hoursPerRT" min="1" max="3" step="0.1">
-      </div>
-      <div class="row">
         <label>Crew cost per day <span class="val" id="crewCostDay_v"></span></label>
         <input type="range" id="crewCostDay" min="300" max="1200" step="50">
+        <div class="note">Paid per operating day regardless of which route runs that day.</div>
       </div>
     </div>
 
@@ -284,7 +361,7 @@
     </table>
 
     <div class="footnote">
-      Model mirrors the Money Maker Scenario tab of the full "Romasco Boat Options — Financial Model" workbook. Fixed to a single vessel. Fuel-burn default (30 gal/hr) is grounded in third-party test-boat data for comparable engines (twin Suzuki DF300 / twin Mercury Verado 350 V10), scaled up for a heavier loaded 47' catamaran — the Cooper Catamarans quote itself gives no consumption figures. Landed capex, interest rate and loan term are all working estimates, not lender or broker quotes. IRR is shown as "n/m" when cumulative cash flow is still negative at Year 5, since IRR on an unrecovered investment has no reliable, meaningful root.
+      Model mirrors the Money Maker Scenario tab of the full "Romasco Boat Options — Financial Model" workbook, extended with two routes. Fixed to a single vessel. Fuel-burn default (30 gal/hr) is grounded in third-party test-boat data for comparable engines (twin Suzuki DF300 / twin Mercury Verado 350 V10), scaled up for a heavier loaded 47' catamaran — the Cooper Catamarans quote itself gives no consumption figures. Landed capex, interest rate, loan term and both routes' pricing are all working estimates, not lender, broker or charter-market quotes. IRR is shown as "n/m" when cumulative cash flow is still negative at Year 5, since IRR on an unrecovered investment has no reliable, meaningful root.
     </div>
   </div>
 </div>
@@ -292,11 +369,14 @@
 <script>
 const DEFAULTS = {
   capex: 1000000, downPct: 100, rate: 8, term: 15,
-  price: 2750, tripsPerDay: 2, opDays: 100, commission: 0,
-  fuelPrice: 5.5, burnRate: 30, hoursPerRT: 1.5, crewCostDay: 550,
+  opDays: 100, commission: 0, mix: 0,
+  sfdPrice: 2000, sfdTripsPerDay: 2, sfdHoursPerRT: 1.5,
+  vgPrice: 2000, vgTripsPerDay: 2,
+  fuelPrice: 5.5, burnRate: 30, crewCostDay: 550,
   maintPct: 9, insPct: 2, dockMonth: 3000, visrYear: 5000, adminPct: 8,
   priceGrowth: 3, costInflation: 3
 };
+const VG_EXTRA_HOURS = 1.5;
 
 const ids = Object.keys(DEFAULTS);
 let chart = null;
@@ -334,6 +414,7 @@ function irr(cashflows) {
 function readInputs() {
   const v = {};
   ids.forEach(id => { v[id] = parseFloat(document.getElementById(id).value); });
+  v.vgHoursPerRT = v.sfdHoursPerRT + VG_EXTRA_HOURS;
   return v;
 }
 
@@ -350,21 +431,36 @@ function compute(v) {
   const maintPct = v.maintPct / 100;
   const insPct = v.insPct / 100;
   const adminPct = v.adminPct / 100;
+  const mixPct = v.mix / 100; // fraction Virgin Gorda
 
   const rows = [];
   let cumulative = 0;
   for (let i = 0; i < 5; i++) {
     const yr = i + 1;
-    const priceY = v.price * Math.pow(1 + priceGrowth, i);
-    const fleetRTday = v.tripsPerDay;
-    const grossRev = priceY * fleetRTday * v.opDays;
+    const inflFactor = Math.pow(1 + costInflation, i);
+    const growFactor = Math.pow(1 + priceGrowth, i);
+
+    const vgDays = v.opDays * mixPct;
+    const sfdDays = v.opDays * (1 - mixPct);
+
+    const sfdPriceY = v.sfdPrice * growFactor;
+    const vgPriceY = v.vgPrice * growFactor;
+
+    const sfdGross = sfdPriceY * v.sfdTripsPerDay * sfdDays;
+    const vgGross = vgPriceY * v.vgTripsPerDay * vgDays;
+    const grossRev = sfdGross + vgGross;
     const netRev = grossRev * (1 - commission);
-    const fuelCost = v.fuelPrice * Math.pow(1 + costInflation, i) * v.burnRate * v.hoursPerRT * fleetRTday * v.opDays;
-    const crewCost = v.crewCostDay * Math.pow(1 + costInflation, i) * v.opDays;
+
+    const fuelPriceY = v.fuelPrice * inflFactor;
+    const sfdFuel = fuelPriceY * v.burnRate * v.sfdHoursPerRT * v.sfdTripsPerDay * sfdDays;
+    const vgFuel = fuelPriceY * v.burnRate * v.vgHoursPerRT * v.vgTripsPerDay * vgDays;
+    const fuelCost = sfdFuel + vgFuel;
+
+    const crewCost = v.crewCostDay * inflFactor * v.opDays;
     const maintCost = capex * maintPct;
     const insCost = capex * insPct;
-    const dockCost = v.dockMonth * 12 * Math.pow(1 + costInflation, i);
-    const visrCost = v.visrYear * Math.pow(1 + costInflation, i);
+    const dockCost = v.dockMonth * 12 * inflFactor;
+    const visrCost = v.visrYear * inflFactor;
     const adminCost = netRev * adminPct;
     const totalOpCost = fuelCost + crewCost + maintCost + insCost + dockCost + visrCost + adminCost;
     const netOpCF = netRev - totalOpCost;
@@ -372,7 +468,7 @@ function compute(v) {
     const debtOutflow = (yr <= term) ? debtServiceAnnual : 0;
     const netCF = netOpCF + downOutflow + debtOutflow;
     cumulative += netCF;
-    rows.push({ yr, grossRev, netRev, totalOpCost, netOpCF, debtOutflow, netCF, cumulative });
+    rows.push({ yr, sfdGross, vgGross, grossRev, netRev, fuelCost, totalOpCost, netOpCF, debtOutflow, netCF, cumulative, sfdDays, vgDays });
   }
 
   let payback = "Beyond 5 years";
@@ -390,13 +486,17 @@ function render() {
   document.getElementById("downPct_v").textContent = v.downPct + "%";
   document.getElementById("rate_v").textContent = v.rate.toFixed(2) + "%";
   document.getElementById("term_v").textContent = v.term + " yrs";
-  document.getElementById("price_v").textContent = fmtMoney(v.price);
-  document.getElementById("tripsPerDay_v").textContent = v.tripsPerDay;
   document.getElementById("opDays_v").textContent = v.opDays + " days";
   document.getElementById("commission_v").textContent = v.commission + "%";
+  document.getElementById("mix_v").textContent = v.mix + "% Virgin Gorda";
+  document.getElementById("sfdPrice_v").textContent = fmtMoney(v.sfdPrice);
+  document.getElementById("sfdTripsPerDay_v").textContent = v.sfdTripsPerDay;
+  document.getElementById("sfdHoursPerRT_v").textContent = v.sfdHoursPerRT.toFixed(1) + " hrs";
+  document.getElementById("vgPrice_v").textContent = fmtMoney(v.vgPrice);
+  document.getElementById("vgTripsPerDay_v").textContent = v.vgTripsPerDay;
+  document.getElementById("vgHoursPerRT_v").textContent = v.vgHoursPerRT.toFixed(1) + " hrs";
   document.getElementById("fuelPrice_v").textContent = "$" + v.fuelPrice.toFixed(2) + "/gal";
   document.getElementById("burnRate_v").textContent = v.burnRate + " gal/hr";
-  document.getElementById("hoursPerRT_v").textContent = v.hoursPerRT.toFixed(1) + " hrs";
   document.getElementById("crewCostDay_v").textContent = fmtMoney(v.crewCostDay) + "/day";
   document.getElementById("maintPct_v").textContent = v.maintPct.toFixed(1) + "%";
   document.getElementById("insPct_v").textContent = v.insPct.toFixed(2) + "%";
@@ -430,13 +530,18 @@ function render() {
   const financedNote = v.downPct < 100
     ? " Annual debt service is " + fmtMoney(m.debtServiceAnnual) + " on a " + fmtMoney(m.loanAmount) + " loan at " + v.rate.toFixed(2) + "% over " + v.term + " years."
     : " Modeled as an all-cash purchase (no financing).";
+  const mixDesc = v.mix === 0 ? "100% Sir Francis Drake Channel"
+    : v.mix === 100 ? "100% Virgin Gorda"
+    : v.mix + "% Virgin Gorda / " + (100 - v.mix) + "% Sir Francis Drake";
   document.getElementById("headline").textContent =
-    "At " + fmtMoney(v.price) + "/round trip, " + v.tripsPerDay + " trip(s)/day and " + v.opDays + " operating days/year: Year 1 net operating cash flow is " +
+    "At a route mix of " + mixDesc + " across " + v.opDays + " operating days/year: Year 1 net operating cash flow is " +
     fmtMoney(m.rows[0].netOpCF) + " against " + fmtMoney(m.capex) + " of total capital. Cumulative cash flow reaches " +
     fmtMoney(m.rows[4].cumulative) + " by the end of Year 5 (" + m.payback + ")." + financedNote;
 
   const tbody = document.getElementById("tbody");
   const lines = [
+    ["— Sir Francis Drake gross revenue", r => r.sfdGross, false, false, true],
+    ["— Virgin Gorda gross revenue", r => r.vgGross, false, false, true],
     ["Gross charter revenue", r => r.grossRev, false],
     ["Net charter revenue", r => r.netRev, false],
     ["Total operating costs", r => -r.totalOpCost, true],
@@ -445,13 +550,13 @@ function render() {
     ["Net cash flow", r => r.netCF, false, true],
     ["Cumulative cash flow", r => r.cumulative, false, true],
   ];
-  tbody.innerHTML = lines.map(([label, fn, alwaysNeg, bold]) => {
+  tbody.innerHTML = lines.map(([label, fn, alwaysNeg, bold, sub]) => {
     const cells = m.rows.map(r => {
       const val = fn(r);
       const cls = val < 0 ? "neg" : "";
       return `<td class="${cls}">${fmtMoney(val)}</td>`;
     }).join("");
-    return `<tr class="${bold ? "total" : ""}"><td>${label}</td>${cells}</tr>`;
+    return `<tr class="${bold ? "total" : (sub ? "sub" : "")}"><td>${label}</td>${cells}</tr>`;
   }).join("");
 
   const ctx = document.getElementById("cfChart").getContext("2d");
