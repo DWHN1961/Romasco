@@ -380,6 +380,15 @@ function api(path, opts){
 }
 function rest(path, opts){ return api('/rest/v1' + path, opts); }
 
+function jwtSub(){
+  try{
+    var t = session && session.access_token; if(!t) return null;
+    var b = t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    while(b.length % 4) b += '=';
+    return JSON.parse(decodeURIComponent(escape(atob(b)))).sub || null;
+  }catch(e){ return null; }
+}
+
 function saveSession(s){
   if(s && s.access_token){
     s.expires_at = Date.now() + ((s.expires_in || 3600) * 1000);
@@ -608,7 +617,9 @@ function showGate(){ el('gate').classList.remove('hide'); el('app').classList.ad
 
 function fetchProfile(){
   if(!online && profile) return Promise.resolve(profile);
-  return rest('/profiles?select=*&limit=1').then(function(rows){
+  var uid = jwtSub();
+  var q = uid ? ('/profiles?select=*&id=eq.'+uid) : '/profiles?select=*&limit=1';
+  return rest(q).then(function(rows){
     profile = (rows && rows[0]) || null;
     if(profile) ls(K.prof, profile);
     return profile;
