@@ -205,6 +205,10 @@ table.sum tfoot td{font-weight:700;background:#eef2f5;border-bottom:0}
 .mbox h3{margin:0 0 4px;font-size:17px;color:var(--navy)}
 .mbox p.s{margin:0 0 14px;font-size:13px;color:var(--mute)}
 
+@media (min-width:760px){
+  .fab{left:auto;right:20px;bottom:20px;padding:0;background:none}
+  .fab button{width:auto;min-width:200px;padding:0 24px}
+}
 @media (max-width:700px){
   .row{grid-template-columns:1fr}
   .tally{text-align:left;display:flex;gap:10px;align-items:baseline}
@@ -448,11 +452,10 @@ function currentCall(){
   var open = cache.calls.filter(function(c){ return c.status==='open'; })[0];
   if(open) return open;
   var t = todayISO();
-  var today = cache.calls.filter(function(c){ return c.call_date===t; })[0];
+  var today = cache.calls.filter(function(c){ return c.call_date===t && c.status!=='closed'; })[0];
   if(today) return today;
-  var next = cache.calls.filter(function(c){ return c.call_date >= t && c.status!=='closed'; })
-                        .sort(function(a,b){ return a.call_date<b.call_date?-1:1; })[0];
-  return next || cache.calls[cache.calls.length-1] || null;
+  return cache.calls.filter(function(c){ return c.call_date >= t && c.status!=='closed'; })
+                    .sort(function(a,b){ return a.call_date<b.call_date?-1:1; })[0] || null;
 }
 function stockFor(productId){
   var call = currentCall(); if(!call) return null;
